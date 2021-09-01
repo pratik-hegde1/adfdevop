@@ -1,0 +1,55 @@
+Name = TaxiCab-ADF-Project
+Github Repo = adfdevops
+
+#cloudshell (Powershell)
+-------------------------------------------------
+$resourceGroupName = "ADF-RG-SEA"
+$location = 'Southeast Asia'
+$ResGrp = New-AzResourceGroup $resourceGroupName -location 'Southeast Asia'
+$dataFactoryName1 = "ADFlivedemosea-Dev"
+$dataFactoryName2 = "ADFlivedemosea-UAT"
+$dataFactoryName3 = "ADFlivedemosea-Prod"
+
+$DataFactory = Set-AzDataFactoryV2 -ResourceGroupName $ResGrp.ResourceGroupName -Location $ResGrp.Location -Name $dataFactoryName1
+$DataFactory = Set-AzDataFactoryV2 -ResourceGroupName $ResGrp.ResourceGroupName -Location $ResGrp.Location -Name $dataFactoryName2
+$DataFactory = Set-AzDataFactoryV2 -ResourceGroupName $ResGrp.ResourceGroupName -Location $ResGrp.Location -Name $dataFactoryName3
+
+#Source of data (upload one/any file)
+New-AzStorageAccount -ResourceGroupName $resourceGroupName `
+  -Name storageaccphsource `
+  -Location $location `
+  -SkuName Standard_RAGRS `
+  -Kind StorageV2
+
+#Sink of the ADF 
+New-AzStorageAccount -ResourceGroupName $resourceGroupName `
+  -Name storageaccphsink `
+  -Location $location `
+  -SkuName Standard_RAGRS `
+  -Kind StorageV2
+
+
+--------------------------------------------
+
+#Stop Trigger 
+
+-armTemplate "$(System.DefaultWorkingDirectory)/_adf_publish_source/ADFlivedemosea-Dev/ARMTemplateForFactory.json" -ResourceGroupName ADF-RG-SEA -DataFactoryName ADFlivedemosea-UAT -predeployment $true -deleteDeployment $false
+
+
+-armTemplate "$(System.DefaultWorkingDirectory)/<your-arm-template-location>" -ResourceGroupName <your-resource-group-name> -DataFactoryName <your-data-factory-name> -predeployment $true -deleteDeployment $false
+
+
+#Start Trigger 
+
+-armTemplate "$(System.DefaultWorkingDirectory)/_adf_publish_source/ADFlivedemosea-Dev/ARMTemplateForFactory.json" -ResourceGroupName ADF-RG-SEA -DataFactoryName ADFlivedemosea-UAT -predeployment $false -deleteDeployment $true
+
+
+
+#Source connection  string 
+DefaultEndpointsProtocol=https;AccountName=storageaccshivam1;AccountKey=mhm0xtMFqJNv+rPHN29wseNNnpFQjxFAnIWgxj3A1mM3EB9obgOdXDL4s1X+dxF58+wP5vRAkqnRqOGYf5b+tw==;EndpointSuffix=core.windows.net
+
+# Sink connection string 
+DefaultEndpointsProtocol=https;AccountName=storageaccshivam2;AccountKey=IlRMs2pI461T0UNaa4tpmOoJ/cik4bjPEH4Et5cdavaVHOGj9BKQMjBlyAImbn3kgvslVPlMOtYAtyoVJtzsxQ==;EndpointSuffix=core.windows.net
+
+
+
